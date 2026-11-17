@@ -1,0 +1,35 @@
+name: Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: plugin.js parses as an ES module
+        run: |
+          cp desktop/plugin.js /tmp/plugin.mjs
+          node --check /tmp/plugin.mjs
+      - name: plugin.yaml has name, version, description
+        run: |
+          for k in name version description; do
+            grep -qE "^$k: " plugin.yaml || { echo "plugin.yaml is missing $k"; exit 1; }
+          done
+      - name: No jsx import from the SDK (breaks loading)
+        run: |
+          if grep -nE "import[^;]*\bjsx\b[^;]*from '@hermes/plugin-sdk'" desktop/plugin.js; then exit 1; fi
+      - name: No personal data patterns
+        run: |
+          if grep -rnIE "@gmail\.com|/Users/[A-Za-z]|ghp_[A-Za-z0-9]{20}|sk-[A-Za-z0-9]{20}" --exclude-dir=.git --exclude=check.yml .; then exit 1; fi
+      - name: Catalog DOM-reach patterns (2 known, no new ones)
+        run: |
+          n=$(grep -cE "querySelector(All)?\(\s*['\"\`][^'\"\`]*\[data-(slot|tour|sidebar|testid)|\.observe\(\s*document\.body" desktop/plugin.js || true)
+          echo "DOM-reach lines: $n (known: 2, to be removed once the SDK exports useContributions)"
+          [ "$n" -le 2 ] || { echo "New DOM-reach added; the Hermes catalog refuses these."; exit 1; }

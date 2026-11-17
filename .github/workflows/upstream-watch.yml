@@ -1,0 +1,34 @@
+name: Upstream watch
+
+# Weekly: check Hermes upstream for changes that affect this plugin and hand each one to
+# GitHub Copilot as an issue. Run it by hand from the Actions tab to test.
+on:
+  schedule:
+    - cron: "17 14 * * 1" # Mondays 14:17 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Print what would happen, create nothing"
+        type: boolean
+        default: true
+      force:
+        description: "Treat one check as fired (use-contributions, row-tag, prefs-area)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check upstream
+        env:
+          GH_TOKEN: ${{ secrets.COPILOT_ASSIGN_TOKEN || github.token }}
+          REPO: ${{ github.repository }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '1' || '0' }}
+          FORCE: ${{ inputs.force }}
+        run: bash scripts/upstream-watch.sh
