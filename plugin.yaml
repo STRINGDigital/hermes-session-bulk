@@ -1,0 +1,7 @@
+name: session-bulk
+version: 1.0.0
+description: "Sessions (bulk) for Hermes Desktop: list, filter, multi-select, archive and delete sessions, and reorder the sidebar rows (Default, A-Z, Z-A, or drag-and-drop Custom)."
+author: String Digital
+license: MIT
+homepage: https://github.com/STRINGDigital/hermes-session-bulk
+tags: [desktop, sessions, sidebar]
